@@ -1,5 +1,5 @@
 let pageCount = 1;//変数pageCountに1を代入
-let prevSearchword = "";//検索した前の値の変数prev_searchwordに空を代入する。
+let prevSearchword = "";//検索した前の値の変数prevSearchwordに空を代入する。
 
 //1.検索した値が前の値と同じ場合はpageCountを1増えていく、違う場合は初期値1に戻す
 $(".search-btn").on("click", function () {//検索ボタンを押した際に以下の処理を行う
@@ -48,7 +48,8 @@ $(".search-btn").on("click", function () {//検索ボタンを押した際に以
     break;
     }
     })
-    }else{//検索の値が検索ボックスに存在しない場合
+    //検索の値が検索ボックスに存在しない場合
+    }else{
     $(".lists").append('<div class="message"><p><br>検索キーワードが有効ではありません。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示する
     }
     prevSearchword = searchWord//検索ボックスの値をprev_searchWordに代入する。
