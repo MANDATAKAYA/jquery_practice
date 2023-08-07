@@ -1,61 +1,66 @@
-let pageCount = 1;//変数pageCountに1を代入
-let prevSearchword = "";//検索した前の値の変数prevSearchwordに空を代入する。
+//1.検索した値が前の値と同じ場合は上書きする。違う場合は初期に戻す処理
+//2.非同期通信が成功した際、API先のオブジェクトを持ってき、リスト要素に追加させる処理
+//3.非同期通信の準備,通信成功、通信失敗時の処理
+//4.リセットボタンの処理(検索BOXの値を消す,listsクラス部分を消す,最初の配列からやり直し)
 
-//1.検索した値が前の値と同じ場合はpageCountを1増えていく、違う場合は初期値1に戻す
-$(".search-btn").on("click", function () {//検索ボタンを押した際に以下の処理を行う
-  let searchWord = $("#search-input").val();//変数searchWordにsearch-inputの要素の値を代入する
-  if (searchWord == prevSearchword) {//もし、検索値が前回の検索地と同じ場合は以下処理を行う
-    pageCount++;//1増やす
-  } else {//それ以外の場合は(違う)以下処理を行う
-    pageCount = 1;//pagecountを1にする
-    $(".lists").empty();//listsクラス部分を空にする。
+//変数準備
+let pageCount = 1;//カウントをとる変数
+let prevSerchWord = "";//前の検索ワードの変数
+//1.
+$(".search-btn").on("click", function () {//検索ボタンを押した時の処理
+  let searchWord = $("#search-input").val();//検索値の変数。valメソッド()
+  if (searchWord == prevSerchWord) {//検索値が前の検索値と合致したら
+    pageCount++;//表示部分を上書き
+  } else {//検索値が前の検索値と違ったら
+    pageCount = 1;//表示部分を初期に戻す
+    $(".lists").empty();//表示部分を空にする。emptyメソッド()
+    prevSerchWord = searchWord//検索値を前の検索値に代入
   }
-  //2.検索したデータをlistクラスを持つ要素部分に表示するsearch関数の用意。
-  function search(data) {//serch関数を用意、引数data
-    let array = data[0].items;//変数arrayに配列を代入する
-    $.each(array, function (index, items) {//各繰り返し処理で実行したい関数を指定する。each(インデックス番号,function関数の用意)
-      $(".lists").prepend('<li class="lists-item"><div class="list-inner"><p>タイトル:' +//リスト部分に表示される
-        items.title//titleがつく配列のデータを持ってくる
-        + "</p><p>作者 : "//作者を表示する
-        + items["dc:creator"]//dc:createrがつく配列のデータを持ってくる
-        + "</p><p>出版社 : "//出版社を表示する
-        + items["dc:publisher"]//dc:publisherがつく配列のデータを持ってくる
-        + '</p><a href="'//リンク部分の表示
-        + items["@id"]//@idがつく配列のデータを持ってくる
-        + '" target="_blank">書籍情報</a></div></li>')//書籍部分を表示する(リンクにとぶように)
+  //2.
+  function search(data) {//search関数を用意
+    let array = data[0].items;//配列を用意。
+    $.each(array, function (index, items) {//複数オブジェクトに対して繰り返し処理を行う。$each(配列,function(index,要素))
+      $(".lists").prepend('<li class="lists-item"><div class="list-inner"><p>タイトル:' + items.title//タイトルのデータを表示させる
+        + "</p>"+"<p>作者 : " + items["dc:creator"]//作者のデータを表示させる
+        + "</p>"+"<p>出版社 : " + items["dc:publisher"]//出版社のデータを表示させる
+        + "</p>"+'<a href="' + items["@id"] + '" target="_blank">書籍情報</a></div></li>')//書籍情報のデータをを表示させる
     });
   }
-  //3.通信の準備
-  if (searchWord) {//もし検索の値が検索ボックスに存在する場合以下の処理を行う
-    const settings = {// 変数settingsに設定情報などを格納
-      url: `https://ci.nii.ac.jp/books/opensearch/search?title=${searchWord}&format=json&p=${pageCount}&count=20`,//通信したいurlを用意する
-      method: "GET"//通信手段をGETとする
+  //3.
+  if (searchWord) {//検索ワードが存在する場合
+    const settings = {//変数settingsにAPI情報を格納する
+      url: `https://ci.nii.ac.jp/books/opensearch/search?title=${searchWord}&format=json&p=${pageCount}&count=20`,//通信したいurlを用意する(図書館の情報)
+      method: "GET"//通信手段をGETメソッド
+    }
+    //通信成功時の関数
+    function success(response) {//通信成功した時の処理。引数responseにAPIのデータが格納されるようにする
+      if (response["@graph"][0]['opensearch:totalResults'] == 0) {//もし検索結果総数が存在しない場合
+        $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示させる。
+      } else {//検索結果総数が存在する場合
+        search(response["@graph"]);//search関数を呼びだす。listsクラスで表示したい部分が格納されている@graph配列データを引き渡す。
+        console.log(response)
+      }
+    }
+    //通信失敗時の関数
+    function failure(err) {//通信が失敗した時の処理
+      switch (err.status) {//errのステータス
+        case 400://ステータスが400の場合
+          $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示する
+          break;
+      }
     }
     // Ajaxの実行
-    $.ajax(settings)//引数をsettingと指定する
-      .done(function (response) {//通信成功した時の処理、”response”が引数となっていて通信した結果を受け取っている
-        if (response["@graph"][0]['opensearch:totalResults'] == 0) {//もしopensearch:totalResultが0の場合は
-          $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示させる。
-        } else {//opensearch:totalResultが0でない場合
-          search(response["@graph"]);//search関数を呼び出す。@graphがつくデータを引き渡す。
-        }
-      })
-      //.failが通信に失敗した時の処理、”err”にサーバーから送られてきたエラー内容を受け取っている。(失敗した際にメッセージを出す。上記で記載されているが念のため記載)
-      .fail(function (err) {//通信が失敗した時の処理
-        switch (err.status) {//errのステータス
-          case 400://ステータスが400の場合
-            $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示する
-            break;
-        }
-      })
+    $.ajax(settings)//Ajaxリクエストを送信するURLを引数。非同期通信。
+      .done(success)//通信成功時、success関数を呼びだす。doneメソッド,done(function)
+      .fail(failure)//通信失敗時、failure関数を呼びだす。failメソッド,fail(function)
     //検索の値が検索ボックスに存在しない場合
   } else {
     $(".lists").append('<div class="message"><p><br>検索キーワードが有効ではありません。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示する
   }
-  prevSearchword = searchWord//検索ボックスの値をprev_searchWordに代入する。
 });
-//5.リセットボタンの実施
-$(".reset-btn").on("click", function () {//リセットボタンを押した際に以下の処理を行う
-  $(".lists").empty();//listsクラス部分を空にする。
-  $("#search-input").val("");//search-inputの値を空にする
+//4.
+$(".reset-btn").on("click", function () {//リセットボタンを押した時の処理
+  $(".lists").empty();//list部分を表示させない
+  $("#search-input").val("");//検索ボックスの値を表示させない
+  pageCount = 0;//再度検索した時にlistsクラスを持つ部分に表示される値が配列最初のデータとして持ってくる
 });
