@@ -47,7 +47,7 @@ $(".search-btn").on("click", function () {//検索ボタンを押した時の処
       if (err.status === 400) {
         $(".lists").append('<div class="message"><P><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください</p></div>');
       } else {
-        $(".lists").append('<div class ="message"><p><br>予期せぬエラーが発生しました。<br>再度お試し下さい。</p></div>')
+        $(".lists").append('<div class ="message"><p><br>エラーが発生しました。<br>再度検索をお試し下さい。</p></div>')
       }
     }
     // Ajaxの実行
