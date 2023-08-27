@@ -5,26 +5,16 @@
 
 //変数準備
 let pageCount = 1;//カウントをとる変数
-let prevSerchWord = "";//前の検索ワードの変数
+let prevSearchWord = "";//前の検索ワードの変数
 //1.
 $(".search-btn").on("click", function () {//検索ボタンを押した時の処理
   let searchWord = $("#search-input").val();//検索値の変数。valメソッド()
-  if (searchWord == prevSerchWord) {//検索値が前の検索値と合致したら
+  if (searchWord === prevSearchWord) {//検索値が前の検索値と合致したら
     pageCount++;//表示部分を上書き
   } else {//検索値が前の検索値と違ったら
     pageCount = 1;//表示部分を初期に戻す
     $(".lists").empty();//表示部分を空にする。emptyメソッド()
-    prevSerchWord = searchWord//検索値を前の検索値に代入
-  }
-  //2.
-  function search(data) {//search関数を用意
-    let array = data[0].items;//配列を用意。
-    $.each(array, function (index, items) {//複数オブジェクトに対して繰り返し処理を行う。$each(配列,function(index,要素))
-      $(".lists").prepend('<li class="lists-item"><div class="list-inner"><p>タイトル:' + items.title//タイトルのデータを表示させる
-        + "</p>"+"<p>作者 : " + items["dc:creator"]//作者のデータを表示させる
-        + "</p>"+"<p>出版社 : " + items["dc:publisher"]//出版社のデータを表示させる
-        + "</p>"+'<a href="' + items["@id"] + '" target="_blank">書籍情報</a></div></li>')//書籍情報のデータをを表示させる
-    });
+    prevSearchWord = searchWord//検索値を前の検索値に代入
   }
   //3.
   if (searchWord) {//検索ワードが存在する場合
@@ -33,26 +23,41 @@ $(".search-btn").on("click", function () {//検索ボタンを押した時の処
       method: "GET"//通信手段をGETメソッド
     }
     //通信成功時の関数
-    function success(response) {//通信成功した時の処理。引数responseにAPIのデータが格納されるようにする
+    function success(response) {
+      function createHtml(data) {//createHtml関数を用意
+        books = data[0].items;//配列を用意。
+        $.each(books, function (index, items) {//複数オブジェクトに対して繰り返し処理を行う。$each(配列,function(index,要素))
+          const author = items["dc:creator"];
+          const authorTexr = author ? "作者 :" + author : "作者不明"//作者不明かどうか判断する
+          $(".lists").prepend(//書籍情報のデータをを表示させる
+            ('<li class="lists-item"><div class="list-inner"><p>タイトル:' + items.title//タイトルのデータを表示させる
+              + "</p>" + "<p>作者 : " + authorTexr//作者のデータを表示させる
+              + "</p>" + "<p>出版社 : " + items["dc:publisher"]//出版社のデータを表示させる
+              + "</p>" + '<a href="' + items["@id"] + '" target="_blank">書籍情報</a></div></li>'))
+        });
+      }//通信成功した時の処理。引数responseにAPIのデータが格納されるようにする
       if (response["@graph"][0]['opensearch:totalResults'] == 0) {//もし検索結果総数が存在しない場合
         $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示させる。
       } else {//検索結果総数が存在する場合
-        search(response["@graph"]);//search関数を呼びだす。listsクラスで表示したい部分が格納されている@graph配列データを引き渡す。
-        console.log(response)
+        createHtml(response["@graph"]);//listsクラスで表示したい部分が格納されている@graph配列データを引き渡す。
       }
     }
     //通信失敗時の関数
     function failure(err) {//通信が失敗した時の処理
-      switch (err.status) {//errのステータス
-        case 400://ステータスが400の場合
-          $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示する
-          break;
+      if (err.status === 400) {
+        $(".lists").append('<div class="message"><P><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください</p></div>');
+      } else {
+        $(".lists").append('<div class ="message"><p><br>予期せぬエラーが発生しました。<br>再度お試し下さい。</p></div>')
       }
     }
     // Ajaxの実行
     $.ajax(settings)//Ajaxリクエストを送信するURLを引数。非同期通信。
-      .done(success)//通信成功時、success関数を呼びだす。doneメソッド,done(function)
-      .fail(failure)//通信失敗時、failure関数を呼びだす。failメソッド,fail(function)
+      .done(function(response){
+        success(response);
+      })//通信成功時、success関数を呼びだす。doneメソッド,done(function)
+      .fail(function(err){
+        failure(err);
+      })//通信失敗時、failure関数を呼びだす。failメソッド,fail(function)
     //検索の値が検索ボックスに存在しない場合
   } else {
     $(".lists").append('<div class="message"><p><br>検索キーワードが有効ではありません。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示する
