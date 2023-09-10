@@ -8,7 +8,7 @@ let pageCount = 1;//カウントをとる変数
 let prevSearchWord = "";//前の検索ワードの変数
 //1.
 $(".search-btn").on("click", function () {//検索ボタンを押した時の処理
-  let searchWord = $("#search-input").val();//検索値の変数。valメソッド()
+  const searchWord = $("#search-input").val();//検索値の変数。valメソッド()
   if (searchWord === prevSearchWord) {//検索値が前の検索値と合致したら
     pageCount++;//表示部分を上書き
   } else {//検索値が前の検索値と違ったら
@@ -32,7 +32,7 @@ $(".search-btn").on("click", function () {//検索ボタンを押した時の処
       })//通信失敗時、failure関数を呼びだす。failメソッド,fail(function)
     //検索の値が検索ボックスに存在しない場合
   } else {
-    $(".lists").append('<div class="message"><p><br>正常に通信できませんでした。<br>インターネットの接続の確認をしてください。</p></div>');//listsクラスにメッセージを表示する
+    $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示する
   }
 });
 //通信成功時の関数
@@ -53,10 +53,10 @@ function success(response) {
           + "</p>" + '<a href="' + items["@id"] + '" target="_blank">書籍情報</a></div></li>'))
     });
   }//通信成功した時の処理。引数responseにAPIのデータが格納されるようにする
-  if (response["@graph"][0]['opensearch:totalResults'] === 0) {//もし検索結果総数が存在しない場合
-    $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示させる。
-  } else {//検索結果総数が存在する場合
+  if (response["@graph"][0]['opensearch:totalResults'] != 0) {//検索結果総数が存在する場合
     createHtml(response["@graph"]);//listsクラスで表示したい部分が格納されている@graph配列データを引き渡す。
+  } else {//もし検索結果総数が存在しない場合
+    $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示させる。
   }
 }
 //通信失敗時の関数
@@ -64,7 +64,7 @@ function failure(err) {//通信が失敗した時の処理
   if (err.status === 400) {
     $(".lists").append('<div class="message"><P><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください</p></div>');//処理が完了できなかった場合
   } else if (err.status === 0) {
-    $(".lists").append('<div class="message"><P><br>ネットワークライブラリに支障をきたしています。<br>別のキーワードで検索してください</p></div>');//ネットワークエラー時
+    $(".lists").append('<div class="message"><P>検索ワードを見直してください</p></div>');//ネットワークエラー時、指定したURLが正しくない場合
   } else {
     $(".lists").append('<div class ="message"><p><br>エラーが発生しました。<br>再度検索をお試し下さい。</p></div>')
   }
@@ -72,6 +72,7 @@ function failure(err) {//通信が失敗した時の処理
 //4.
 $(".reset-btn").on("click", function () {//リセットボタンを押した時の処理
   pageCount = 1;//pagecount変数に1を代入する
+  prevSearchWord = "";//前の検索値を削除する
   $("#search-input").val("");//検索ボックスの値を表示させない
   $(".lists").empty();//list部分を表示させない
   $(".message").remove();//エラーメッセージを削除する
