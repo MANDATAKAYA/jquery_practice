@@ -32,13 +32,13 @@ $(".search-btn").on("click", function () {//検索ボタンを押した時の処
       })//通信失敗時、failure関数を呼びだす。failメソッド,fail(function)
     //検索の値が検索ボックスに存在しない場合
   } else {
-    $(".lists").append('<div class="message"><p><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください。</p></div>');//listsクラスにメッセージを表示する
+    $(".lists").append('<div class="message"><p>検索ワードを指定してください</p></div>');//listsクラスにメッセージを表示する
   }
 });
 //通信成功時の関数
 function success(response) {
   function createHtml(data) {//createHtml関数を用意
-    let books = data[0].items;//配列を用意。
+    const books = data[0].items;//配列を用意。
     $.each(books, function (index, items) {//複数オブジェクトに対して繰り返し処理を行う。$each(配列,function(index,要素))
       const title = items.title;
       const titleText = title ? "タイトル：" + title : "タイトル：タイトル不明"
@@ -64,7 +64,7 @@ function failure(err) {//通信が失敗した時の処理
   if (err.status === 400) {
     $(".lists").append('<div class="message"><P><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください</p></div>');//処理が完了できなかった場合
   } else if (err.status === 0) {
-    $(".lists").append('<div class="message"><P>検索ワードを見直してください</p></div>');//ネットワークエラー時、指定したURLが正しくない場合
+    $(".lists").append('<div class="message"><P>予定しないエラーが起こりました</p>ネットワークを再度ご確認ください。</div>');//ネットワークエラー時
   } else {
     $(".lists").append('<div class ="message"><p><br>エラーが発生しました。<br>再度検索をお試し下さい。</p></div>')
   }
