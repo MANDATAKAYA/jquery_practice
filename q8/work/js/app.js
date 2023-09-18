@@ -40,12 +40,9 @@ function success(response) {
   function createHtml(data) {//createHtml関数を用意
     const books = data[0].items;//配列を用意。
     $.each(books, function (index, items) {//複数オブジェクトに対して繰り返し処理を行う。$each(配列,function(index,要素))
-      const title = items.title;
-      const titleText = title ? "タイトル：" + title : "タイトル：タイトル不明"
-      const author = items["dc:creator"];
-      const authorText = author ? "作者：" + author : "作者：作者不明"//作者不明かどうか判断する
-      const publisher = items["dc:publisher"];
-      const publisherText = publisher ? "出版社：" + publisher : "出版社：出版社不明"
+      const titleText = items.title ? "タイトル：" + items.title : "タイトル：タイトル不明"
+      const authorText = items["dc:creator"] ? "作者：" + items["dc:creator"] : "作者：作者不明"//作者不明かどうか判断する
+      const publisherText = items["dc:publisher"] ? "出版社：" + items["dc:publisher"] : "出版社：出版社不明"
       $(".lists").prepend(//書籍情報のデータをを表示させる
         ('<li class="lists-item"><div class="list-inner"><p>' + titleText//タイトルのデータを表示させる
           + "</p>" + "<p>" + authorText//作者のデータを表示させる
@@ -64,7 +61,7 @@ function failure(err) {//通信が失敗した時の処理
   if (err.status === 400) {
     $(".lists").append('<div class="message"><P><br>検索結果が見つかりませんでした。<br>別のキーワードで検索してください</p></div>');//処理が完了できなかった場合
   } else if (err.status === 0) {
-    $(".lists").append('<div class="message"><P>予定しないエラーが起こりました</p>ネットワークを再度ご確認ください。</div>');//ネットワークエラー時
+    $(".lists").append('<div class="message"><P>予定しないエラーが起こりました</p>ネットワークを再度ご確認ください。</div>');//インターネット環境に接続されていない状況(Wi-Fi等接続されていない環境時)時に起こるエラー
   } else {
     $(".lists").append('<div class ="message"><p><br>エラーが発生しました。<br>再度検索をお試し下さい。</p></div>')
   }
